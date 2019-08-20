@@ -125,6 +125,7 @@ void start_server(){
         rc = accept(ls, nullptr, nullptr);
         f(rc);
         close(rc);
+
 //        pid = fork();
 //        if ( pid < 0) syslog( LOG_ERR, " fork abort" );
 //        if(pid == 0) {
