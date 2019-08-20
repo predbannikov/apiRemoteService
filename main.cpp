@@ -10,25 +10,92 @@
 #include <X11/Xlib.h>
 
 
-//using namespace std;
+const int _wait = 500000;
 
-static void uinput_postkey(int fd, unsigned key) {
-    struct input_event ev;
-    int rc;
-    memset(&ev, 0, sizeof (ev));
-    ev.type = EV_KEY;
-    ev.code = key;
-    ev.value = 1;
-    rc = write(fd, &ev, sizeof (ev));
-    assert(rc == sizeof (ev));
-    ev.value = 0;
-    rc = write(fd, &ev, sizeof (ev));
-    assert(rc == sizeof (ev));
+
+static int fd;
+
+void destroy_app(){
+    usleep(_wait);
+    if(ioctl(fd, UI_DEV_DESTROY) < 0)
+    {
+        printf("error: ioctl");
+        return ;
+    }
+    close(fd);
 }
 
-int main()
-{
-    int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK); //opening of uinput
+void send_syn() {
+    struct input_event evS;
+    memset(&evS, 0, sizeof(struct input_event));
+    evS.type = EV_SYN;
+//    evS.code = SYN_REPORT;
+//    evS.value = 0;
+    if(write(fd, &evS, sizeof(struct input_event)) < 0) {
+        printf("error: sync-report");
+        return ;
+    }
+}
+
+void release_button(__U16_TYPE code = BTN_LEFT) {
+    struct input_event ev;
+    memset(&ev, 0, sizeof(struct input_event));
+    ev.type = EV_KEY;
+    ev.code = code;
+    ev.value = 0;
+
+    if(write(fd, &ev, sizeof(struct input_event)) < 0) {
+        printf("error: sync-report");
+        return ;
+    }
+    send_syn();
+}
+
+void move_cursor(int x, int y) {
+    struct input_event ev[2];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_ABS;
+    ev[0].code = ABS_X;
+    ev[0].value = x;
+    ev[1].type = EV_ABS;
+    ev[1].code = ABS_Y;
+    ev[1].value = y ;
+
+    if(write(fd, ev, sizeof(ev)) < 0)
+    {
+        printf("error: ABS_Y-write");
+        return ;
+    }
+    send_syn();
+}
+
+void input_click(int x, int y, __U16_TYPE code = BTN_LEFT) {
+    struct input_event ev[4];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_ABS;
+    ev[0].code = ABS_X;
+    ev[0].value = x;
+    ev[1].type = EV_ABS;
+    ev[1].code = ABS_Y;
+    ev[1].value = y ;
+    ev[2].type = EV_KEY;
+    ev[2].code = code;
+    ev[2].value = 1;
+//    ev[3].type = EV_KEY;
+//    ev[3].code = code;
+//    ev[3].value = 0;
+//    ev[3].type = EV_KEY;
+//    ev[3].code = BTN_LEFT;
+//    ev[3].value = 0;
+    if(write(fd, ev, sizeof(ev)) < 0) {
+        printf("error: ABS_Y-write");
+        return ;
+    }
+    send_syn();
+}
+
+int init() {
+    fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK); //opening of uinput
     if (fd < 0) {
       printf("Opening of uinput failed!\n");
       return 1;
@@ -40,12 +107,6 @@ int main()
     ioctl(fd, UI_SET_EVBIT, EV_ABS);
     ioctl(fd, UI_SET_ABSBIT, ABS_X);
     ioctl(fd, UI_SET_ABSBIT, ABS_Y);
-
-//    ioctl(fd, UI_SET_EVBIT, EV_SYN);
-
-
-
-
 
     struct uinput_user_dev uidev;
     memset(&uidev, 0, sizeof(uidev));
@@ -73,58 +134,26 @@ int main()
       printf("error: ui_dev_create");
       return 1;
     }
-
-//    struct input_event syn;
-    struct input_event ev[4];
-    struct input_event evS;
-
-    const int _wait = 350000;
-
     usleep(_wait);
-//    sleep(1);
-    int _i = 1;
-    while(_i--)
-    {
-        printf("-------\n");
-        memset(&ev, 0, sizeof(ev)); //setting the memory for event
-        ev[0].type = EV_ABS;
-        ev[0].code = ABS_X;
-        ev[0].value = 2500;
-        ev[1].type = EV_ABS;
-        ev[1].code = ABS_Y;
-        ev[1].value = 1500 ;
-        ev[2].type = EV_KEY;
-        ev[2].code = BTN_RIGHT;
-        ev[2].value = 0;
-        ev[3].type = EV_KEY;
-        ev[3].code = BTN_RIGHT;
-        ev[3].value = 1;        if(write(fd, ev, sizeof(ev)) < 0) //writing the thumbstick change
-        {
-            printf("error: ABS_Y-write");
-            return 1;
-        }
+    return fd;
+}
 
-
-        memset(&evS, 0, sizeof(struct input_event));
-        evS.type = EV_SYN;
-        evS.code = SYN_REPORT;
-        evS.value = 0;
-        usleep(_wait);
-        if(write(fd, &evS, sizeof(struct input_event)) < 0) //writing the sync report
-        {
-            printf("error: sync-report");
-            return 1;
-        }
-//        uinput_postkey(fd, 0);
-
-    }
-    usleep(_wait);
-    if(ioctl(fd, UI_DEV_DESTROY) < 0)
-    {
-        printf("error: ioctl");
+int main()
+{
+    if(init() == 1)
         return 1;
-    }
-    close(fd);
 
+    input_click(2500, 1500, BTN_LEFT);
+    usleep(_wait);
+    move_cursor(2500, 1600);
+    usleep(_wait);
+    release_button(BTN_LEFT);
+    usleep(_wait);
+    move_cursor(2500, 1500);
+
+
+
+    printf("************");
+    destroy_app();
     return 0;
 }
