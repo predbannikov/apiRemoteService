@@ -6,6 +6,8 @@ CONFIG -= qt
 SOURCES += \
         main.cpp
 
-LIBS += -lpthread
+#LIBS += -lpthread
+LIBS += -lX11
+
 
 HEADERS +=

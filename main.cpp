@@ -82,7 +82,6 @@ std::vector<std::string> getListCMD(char *buff){
 
 void f(int rc) {
     char buff[BUF_SIZE];
-    printf("receiv message\n");
     ssize_t n = 0;
     while ( (n = read(rc, buff, sizeof(buff)-1)) > 0)
     {
@@ -244,11 +243,15 @@ int init() {
     uidev.id.product = 0x3b33;
     uidev.id.version = 222;
 
+
+    Display* d = XOpenDisplay(nullptr);
+    Screen*  s = DefaultScreenOfDisplay(d);
+
     uidev.absmin[ABS_X] = 0;
-    uidev.absmax[ABS_X] = 1920 * 2; //Parameters of thumbsticks
+    uidev.absmax[ABS_X] = s->width;
 
     uidev.absmin[ABS_Y] = 0;
-    uidev.absmax[ABS_Y] = 1080 + 1200;
+    uidev.absmax[ABS_Y] = s->height;
 
 
     if(write(fd, &uidev, sizeof(uidev)) < 0) //writing settings
