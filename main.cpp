@@ -1,19 +1,146 @@
 #include <stdio.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-//#include <errno.h>
+#include <errno.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
 #include <assert.h>
 #include <X11/Xlib.h>
+#include <sys/syslog.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <pthread.h>
+#include <iostream>
+#include <sstream>
+#include <vector>
+
+using namespace std;
 
 
 const int _wait = 500000;
 
-
+#define BUF_SIZE 1024
 static int fd;
+static int ls;
+
+void send_syn();
+void release_button(__U16_TYPE code = BTN_LEFT);
+void move_cursor(int x, int y);
+void input_click(int x, int y, __U16_TYPE code = BTN_LEFT);
+std::vector<std::string> getListCMD(char *buff);
+typedef std::vector<std::string> list;
+
+std::vector<std::string> getListCMD(std::string &s){
+    stringstream str(s);
+    std::string segment;
+    std::vector<std::string> seglist;
+
+    while(std::getline(str, segment, ':'))
+    {
+       seglist.push_back(segment);
+    }
+    return seglist;
+}
+
+void parseScrypt(std::vector<std::string>* script){
+    for(std::string str: *script) {
+        list line =getListCMD(str);
+        if(line[0] == "release_button") {
+            if(line[1] == "BTN_LEFT") {
+                release_button(BTN_LEFT);
+            } else if(line[1] == "BTN_RIGHT") {
+                release_button(BTN_RIGHT);
+            }
+        } else if(line[0] == "move_cursor") {
+            move_cursor(std::stoi(line[1]), std::stoi(line[2]));
+        } else if(line[0] == "input_click") {
+            __U16_TYPE code = line[3]=="BTN_LEFT" ? BTN_LEFT : BTN_RIGHT;
+            input_click(std::stoi(line[1]), std::stoi(line[2]), code);
+        } else if(line[0] == "send_syn") {
+            send_syn();
+        }
+
+    }
+}
+
+
+std::vector<std::string> getListCMD(char *buff){
+    stringstream str;
+    str << static_cast<const char*>(buff);
+
+    std::string segment;
+    std::vector<std::string> seglist;
+
+    while(std::getline(str, segment, ','))
+    {
+       seglist.push_back(segment);
+    }
+    return seglist;
+}
+
+void f(int rc) {
+    char buff[BUF_SIZE];
+    printf("receiv message\n");
+    ssize_t n = 0;
+    while ( (n = read(rc, buff, sizeof(buff)-1)) > 0)
+    {
+        buff[n] = 0;
+        if(fputs(buff, stdout) == EOF)
+        {
+            printf("\n Error : Fputs error\n");
+        }
+    }
+    std::vector<std::string> script = getListCMD(buff);
+    parseScrypt(&script);
+}
+
+void start_server(){
+    struct sockaddr_in addr;
+//    struct sockaddr_un local;
+    int rc;
+    __pid_t pid;
+    if((ls = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP) ) == -1) {
+        perror("Socket con not created!\n");
+        return;
+    }
+    int setsockopt(int socket, int level, int option_name, const void *option_value, socklen_t option_len);
+    memset(&addr, 0, sizeof (0));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons (10101);
+    addr.sin_addr.s_addr = INADDR_ANY ;
+    if(bind(ls, reinterpret_cast<struct sockaddr *> (&addr), sizeof (addr)) < 0) {
+        close(ls);
+        printf("bind error!\n");
+        return;
+    }
+    if(listen(ls, 25) < 0) {
+        close(ls);
+        perror("listen error\n");
+        return;
+    }
+//    pid_t pid = Demonize();
+    while (true) {
+        rc = accept(ls, nullptr, nullptr);
+        f(rc);
+        close(rc);
+//        pid = fork();
+//        if ( pid < 0) syslog( LOG_ERR, " fork abort" );
+//        if(pid == 0) {
+//            close(ls);
+//            f(rc);
+//            close(rc);
+//            return;
+//        } else {
+//            close(rc);
+
+//        }
+    }
+}
+
+
+
 
 void destroy_app(){
     usleep(_wait);
@@ -37,7 +164,7 @@ void send_syn() {
     }
 }
 
-void release_button(__U16_TYPE code = BTN_LEFT) {
+void release_button(__U16_TYPE code) {
     struct input_event ev;
     memset(&ev, 0, sizeof(struct input_event));
     ev.type = EV_KEY;
@@ -69,7 +196,7 @@ void move_cursor(int x, int y) {
     send_syn();
 }
 
-void input_click(int x, int y, __U16_TYPE code = BTN_LEFT) {
+void input_click(int x, int y, __U16_TYPE code) {
     struct input_event ev[4];
     memset(&ev, 0, sizeof(ev));
     ev[0].type = EV_ABS;
@@ -143,17 +270,23 @@ int main()
     if(init() == 1)
         return 1;
 
-    input_click(2500, 1500, BTN_LEFT);
-    usleep(_wait);
-    move_cursor(2500, 1600);
-    usleep(_wait);
-    release_button(BTN_LEFT);
-    usleep(_wait);
-    move_cursor(2500, 1500);
+//    input_click(2500, 1500, BTN_LEFT);
+//    usleep(_wait);
+//    move_cursor(2500, 1600);
+//    usleep(_wait);
+//    release_button(BTN_LEFT);
+//    usleep(_wait);
+//    move_cursor(2500, 1500);
 
+    start_server();
 
-
-    printf("************");
     destroy_app();
+
+
+
+    int i_val = 7;
+    void* v_ptr = static_cast<void* >(static_cast<int *>(&i_val));
+    cout << v_ptr;
+
     return 0;
 }
