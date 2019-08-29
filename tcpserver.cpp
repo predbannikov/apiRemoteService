@@ -32,7 +32,7 @@ void TcpServer::slotReadyRead()
         this->deleteLater();
     QJsonObject _jobj = QJsonDocument::fromJson(_array).object();
     __U16_TYPE code = BTN_LEFT;
-    usleep(_wait);
+//    usleep(1000);
     if(_jobj["action"] == "move_cursor") {
         move_cursor(_jobj["x"].toInt(), _jobj["y"].toInt());
         qDebug() << "move_cursor" << _jobj["x"].toInt() << _jobj["y"].toInt();

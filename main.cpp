@@ -188,7 +188,7 @@ void move_cursor(int x, int y) {
 }
 
 void input_click(int x, int y, __U16_TYPE code) {
-    struct input_event ev[4];
+    struct input_event ev[3];
     memset(&ev, 0, sizeof(ev));
     ev[0].type = EV_ABS;
     ev[0].code = ABS_X;
@@ -269,13 +269,29 @@ int main(int argc, char **argv)
     if(init() == 1)
         return 1;
 
-//    input_click(2500, 1500, BTN_LEFT);
-//    usleep(_wait);
-//    move_cursor(2500, 1600);
-//    usleep(_wait);
+//    input_click(300, 300, BTN_LEFT);
 //    release_button(BTN_LEFT);
 //    usleep(_wait);
-//    move_cursor(2500, 1500);
+
+//    move_cursor(300, 400);
+//    usleep(_wait);
+
+//    input_click(300, 500, BTN_LEFT);
+//    release_button(BTN_LEFT);
+//    usleep(_wait);
+
+
+
+//    input_click(300, 300, BTN_LEFT);
+//    release_button(BTN_LEFT);
+//    usleep(_wait);
+
+//    move_cursor(300, 400);
+//    usleep(_wait);
+
+//    input_click(300, 500, BTN_LEFT);
+//    release_button(BTN_LEFT);
+//    usleep(_wait);
 
 //    start_server();
     TcpServer server;
