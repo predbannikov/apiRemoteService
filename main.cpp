@@ -246,6 +246,7 @@ int init() {
     uidev.absmax[ABS_Y] = s->height;
 
     printf("width=%d  height=%d\n", s->width, s->height);
+    fflush(stdout);
 
 
     if(write(fd, &uidev, sizeof(uidev)) < 0) //writing settings
