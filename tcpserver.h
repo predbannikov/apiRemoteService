@@ -3,6 +3,7 @@
 
 #include <QCoreApplication>
 #include <QObject>
+#include <QDebug>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QAbstractSocket>

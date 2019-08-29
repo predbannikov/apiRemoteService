@@ -32,24 +32,30 @@ void TcpServer::slotReadyRead()
         this->deleteLater();
     QJsonObject _jobj = QJsonDocument::fromJson(_array).object();
     __U16_TYPE code = BTN_LEFT;
+    usleep(_wait);
     if(_jobj["action"] == "move_cursor") {
         move_cursor(_jobj["x"].toInt(), _jobj["y"].toInt());
+        qDebug() << "move_cursor" << _jobj["x"].toInt() << _jobj["y"].toInt();
     } else if(_jobj["action"] == "input_click") {
         if(_jobj["TYPE_BUTTON"].toString() == "BTN_LEFT")
             code = BTN_LEFT;
         else if(_jobj["TYPE_BUTTON"].toString() == "BTN_RIGHT")
             code = BTN_RIGHT;
         input_click(_jobj["x"].toInt(), _jobj["y"].toInt(), code);
+        qDebug() << "input_click" << _jobj["x"].toInt() << _jobj["y"].toInt() << _jobj["TYPE_BUTTON"].toString();
     } else if(_jobj["action"] == "release_button") {
         if(_jobj["TYPE_BUTTON"].toString() == "BTN_LEFT")
             code = BTN_LEFT;
         else if(_jobj["TYPE_BUTTON"].toString() == "BTN_RIGHT")
             code = BTN_RIGHT;
         release_button(code);
+        qDebug() << "release_button" << _jobj["TYPE_BUTTON"].toString();
     } else if(_jobj["action"] == "send_syn") {
         send_syn();
+        qDebug() << "send_syn";
     } else if(_jobj["action"] == "destroy_app") {
         destroy_app();
+        qDebug() << "destroy_app";
     }
 
 }

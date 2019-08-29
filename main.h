@@ -14,4 +14,6 @@ void release_button(__U16_TYPE code = BTN_LEFT);
 void move_cursor(int x, int y);
 void input_click(int x, int y, __U16_TYPE code = BTN_LEFT);
 void destroy_app();
+const int _wait = 500000;
+
 #endif // MAIN_H

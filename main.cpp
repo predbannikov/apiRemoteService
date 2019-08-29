@@ -14,7 +14,6 @@
 using namespace std;
 
 
-const int _wait = 500000;
 
 #define BUF_SIZE 1024
 static int fd;
