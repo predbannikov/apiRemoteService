@@ -43,6 +43,13 @@ void TcpServer::slotReadyRead()
             code = BTN_RIGHT;
         input_click(_jobj["x"].toInt(), _jobj["y"].toInt(), code);
         qDebug() << "input_click" << _jobj["x"].toInt() << _jobj["y"].toInt() << _jobj["TYPE_BUTTON"].toString();
+    } else if(_jobj["action"] == "input_click_up") {
+        if(_jobj["TYPE_BUTTON"].toString() == "BTN_LEFT")
+            code = BTN_LEFT;
+        else if(_jobj["TYPE_BUTTON"].toString() == "BTN_RIGHT")
+            code = BTN_RIGHT;
+        input_click_up(_jobj["x"].toInt(), _jobj["y"].toInt(), code);
+        qDebug() << "input_click" << _jobj["x"].toInt() << _jobj["y"].toInt() << _jobj["TYPE_BUTTON"].toString();
     } else if(_jobj["action"] == "release_button") {
         if(_jobj["TYPE_BUTTON"].toString() == "BTN_LEFT")
             code = BTN_LEFT;

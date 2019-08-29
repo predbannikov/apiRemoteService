@@ -199,12 +199,28 @@ void input_click(int x, int y, __U16_TYPE code) {
     ev[2].type = EV_KEY;
     ev[2].code = code;
     ev[2].value = 1;
-//    ev[3].type = EV_KEY;
-//    ev[3].code = code;
-//    ev[3].value = 0;
-//    ev[3].type = EV_KEY;
-//    ev[3].code = BTN_LEFT;
-//    ev[3].value = 0;
+    if(write(fd, ev, sizeof(ev)) < 0) {
+        printf("error: ABS_Y-write");
+        return ;
+    }
+    send_syn();
+}
+
+void input_click_up(int x, int y, __U16_TYPE code) {
+    struct input_event ev[4];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_ABS;
+    ev[0].code = ABS_X;
+    ev[0].value = x;
+    ev[1].type = EV_ABS;
+    ev[1].code = ABS_Y;
+    ev[1].value = y ;
+    ev[2].type = EV_KEY;
+    ev[2].code = code;
+    ev[2].value = 1;
+    ev[3].type = EV_KEY;
+    ev[3].code = code;
+    ev[3].value = 0;
     if(write(fd, ev, sizeof(ev)) < 0) {
         printf("error: ABS_Y-write");
         return ;
@@ -269,7 +285,7 @@ int main(int argc, char **argv)
     if(init() == 1)
         return 1;
 
-//    input_click(300, 300, BTN_LEFT);
+//    input_click_up(300, 300, BTN_LEFT);
 //    release_button(BTN_LEFT);
 //    usleep(_wait);
 
