@@ -71,7 +71,7 @@ void TcpServer::slotReadyRead()
     } else if(_jobj["action"] == "destroy_app") {
         destroy_app();
         qDebug() << "destroy_app";
-    } else if(_jobj["insert_text"] == "insert_text") {
+    } else if(_jobj["action"] == "insert_text") {
         insert_text(_jobj["text"].toString());
         qDebug() << "insert_text" << _jobj["text"].toString();
     }
