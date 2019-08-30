@@ -17,6 +17,7 @@ void input_click_up(int x, int y, __U16_TYPE code);
 void simple_click_up(__U16_TYPE code);
 
 void press_key(__U16_TYPE code);
+void press_shift_key(__U16_TYPE code);
 
 void destroy_app();
 const int _wait = 500000;

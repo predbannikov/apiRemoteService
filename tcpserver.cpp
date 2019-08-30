@@ -15,14 +15,13 @@ TcpServer::TcpServer(QObject *parent) : QObject(parent)
                 .arg(tcpServer->serverAddress().toString()).arg(tcpServer->serverPort()));
 
     initKeyButton();
-//    insert_text("\\hello");
+    insert_text("");
 }
 
 TcpServer::~TcpServer()
 {
     destroy_app();
 }
-
 
 void TcpServer::slotReadyRead()
 {
@@ -73,7 +72,8 @@ void TcpServer::slotReadyRead()
         destroy_app();
         qDebug() << "destroy_app";
     } else if(_jobj["insert_text"] == "insert_text") {
-
+        insert_text(_jobj["text"].toString());
+        qDebug() << "insert_text" << _jobj["text"].toString();
     }
 
 }
@@ -95,6 +95,17 @@ void TcpServer::slotSendMessage(QTcpSocket *socket, QString t_message)
 
 void TcpServer::initKeyButton()
 {
+
+    keys.insert('0', KEY_0);
+    keys.insert('1', KEY_1);
+    keys.insert('2', KEY_2);
+    keys.insert('3', KEY_3);
+    keys.insert('4', KEY_4);
+    keys.insert('5', KEY_5);
+    keys.insert('6', KEY_6);
+    keys.insert('7', KEY_7);
+    keys.insert('8', KEY_8);
+    keys.insert('9', KEY_9);
     keys.insert('Q', KEY_Q);
     keys.insert('q', KEY_Q);
     keys.insert('W', KEY_W);
@@ -166,8 +177,35 @@ void TcpServer::initKeyButton()
 
 void TcpServer::insert_text(QString t_text)
 {
+    t_text = "hello1234567890-=!@#$%^&*()_+qwertyuiop[]\\|}{asdfghjk,nvxz<>/?";
     for(int i = 0; i < t_text.size(); i++) {
-        __U16_TYPE code = keys[t_text[i]];
-        press_key(code);
+        QChar qch = t_text[i];
+        char ch = qch.toLatin1();
+        switch (ch) {
+        case '!':
+            press_shift_key(KEY_1); break;
+        case '@':
+            press_shift_key(KEY_2); break;
+        case '#':
+            press_shift_key(KEY_3); break;
+        case '$':
+            press_shift_key(KEY_4); break;
+        case '%':
+            press_shift_key(KEY_5); break;
+        case '^':
+            press_shift_key(KEY_6); break;
+        case '&':
+            press_shift_key(KEY_7); break;
+        case '(':
+            press_shift_key(KEY_9); break;
+        case ')':
+            press_shift_key(KEY_0); break;
+        case '_':
+            press_shift_key(KEY_MINUS); break;
+        default:
+            __U16_TYPE code = keys[t_text[i]];
+            press_key(code);
+        }
     }
 }
+

@@ -7,6 +7,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QAbstractSocket>
+#include <QThread>
 #include <QJsonObject>
 #include <QJsonDocument>
 

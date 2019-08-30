@@ -131,6 +131,41 @@ static int fd;
 //}
 */
 
+void press_shift_key(__U16_TYPE code) {
+    struct input_event ev[8];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_KEY;
+    ev[0].code = KEY_LEFTSHIFT;
+    ev[0].value = 1;
+    ev[1].type = EV_SYN;
+    ev[1].code = SYN_REPORT;
+    ev[1].value = 0;
+    ev[2].type = EV_KEY;
+    ev[2].code = code;
+    ev[2].value = 1;
+    ev[3].type = EV_SYN;
+    ev[3].code = SYN_REPORT;
+    ev[3].value = 0;
+    ev[4].type = EV_KEY;
+    ev[4].code = code;
+    ev[4].value = 0;
+    ev[5].type = EV_SYN;
+    ev[5].code = SYN_REPORT;
+    ev[5].value = 0;
+    ev[6].type = EV_KEY;
+    ev[6].code = KEY_LEFTSHIFT;
+    ev[6].value = 0;
+    ev[7].type = EV_SYN;
+    ev[7].code = SYN_REPORT;
+    ev[7].value = 0;
+
+    if(write(fd, ev, sizeof(ev)) < 0) {
+        printf("error: ABS_Y-write");
+        return ;
+    }
+    send_syn();
+}
+
 void press_key(__U16_TYPE code) {
     struct input_event ev[4];
     memset(&ev, 0, sizeof(ev));
