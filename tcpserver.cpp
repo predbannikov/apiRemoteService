@@ -14,6 +14,8 @@ TcpServer::TcpServer(QObject *parent) : QObject(parent)
     qDebug() << qPrintable(tr("The server is running on\n\nIP: %1\nport: %2\n\n")
                 .arg(tcpServer->serverAddress().toString()).arg(tcpServer->serverPort()));
 
+    initKeyButton();
+//    insert_text("\\hello");
 }
 
 TcpServer::~TcpServer()
@@ -43,6 +45,13 @@ void TcpServer::slotReadyRead()
             code = BTN_RIGHT;
         input_click(_jobj["x"].toInt(), _jobj["y"].toInt(), code);
         qDebug() << "input_click" << _jobj["x"].toInt() << _jobj["y"].toInt() << _jobj["TYPE_BUTTON"].toString();
+    } else if(_jobj["action"] == "simple_click_up") {
+        if(_jobj["TYPE_BUTTON"].toString() == "BTN_LEFT")
+            code = BTN_LEFT;
+        else if(_jobj["TYPE_BUTTON"].toString() == "BTN_RIGHT")
+            code = BTN_RIGHT;
+        simple_click_up(code);
+        qDebug() << "input_click" << _jobj["TYPE_BUTTON"].toString();
     } else if(_jobj["action"] == "input_click_up") {
         if(_jobj["TYPE_BUTTON"].toString() == "BTN_LEFT")
             code = BTN_LEFT;
@@ -63,6 +72,8 @@ void TcpServer::slotReadyRead()
     } else if(_jobj["action"] == "destroy_app") {
         destroy_app();
         qDebug() << "destroy_app";
+    } else if(_jobj["insert_text"] == "insert_text") {
+
     }
 
 }
@@ -80,4 +91,83 @@ void TcpServer::slotNewConnection()
 void TcpServer::slotSendMessage(QTcpSocket *socket, QString t_message)
 {
     socket->write(t_message.toUtf8());
+}
+
+void TcpServer::initKeyButton()
+{
+    keys.insert('Q', KEY_Q);
+    keys.insert('q', KEY_Q);
+    keys.insert('W', KEY_W);
+    keys.insert('w', KEY_W);
+    keys.insert('E', KEY_E);
+    keys.insert('e', KEY_E);
+    keys.insert('R', KEY_R);
+    keys.insert('r', KEY_R);
+    keys.insert('T', KEY_T);
+    keys.insert('t', KEY_T);
+    keys.insert('Y', KEY_Y);
+    keys.insert('y', KEY_Y);
+    keys.insert('U', KEY_U);
+    keys.insert('u', KEY_U);
+    keys.insert('I', KEY_I);
+    keys.insert('i', KEY_I);
+    keys.insert('O', KEY_O);
+    keys.insert('o', KEY_O);
+    keys.insert('P', KEY_P);
+    keys.insert('p', KEY_P);
+    keys.insert('a', KEY_A);
+    keys.insert('A', KEY_A);
+    keys.insert('s', KEY_S);
+    keys.insert('S', KEY_S);
+    keys.insert('d', KEY_D);
+    keys.insert('D', KEY_D);
+    keys.insert('F', KEY_F);
+    keys.insert('f', KEY_F);
+    keys.insert('G', KEY_G);
+    keys.insert('g', KEY_G);
+    keys.insert('h', KEY_H);
+    keys.insert('H', KEY_H);
+    keys.insert('j', KEY_J);
+    keys.insert('J', KEY_J);
+    keys.insert('k', KEY_K);
+    keys.insert('K', KEY_K);
+    keys.insert('L', KEY_L);
+    keys.insert('l', KEY_L);
+    keys.insert('z', KEY_Z);
+    keys.insert('Z', KEY_Z);
+    keys.insert('X', KEY_X);
+    keys.insert('x', KEY_X);
+    keys.insert('C', KEY_C);
+    keys.insert('c', KEY_C);
+    keys.insert('V', KEY_V);
+    keys.insert('v', KEY_V);
+    keys.insert('B', KEY_B);
+    keys.insert('b', KEY_B);
+    keys.insert('N', KEY_N);
+    keys.insert('n', KEY_N);
+    keys.insert('M', KEY_M);
+    keys.insert('m', KEY_M);
+    keys.insert(' ', KEY_SPACE);
+    keys.insert('.', KEY_DOT);
+    keys.insert('*', KEY_KPASTERISK);
+    keys.insert('\'', KEY_APOSTROPHE);
+    keys.insert(';', KEY_SEMICOLON);
+    keys.insert(']', KEY_RIGHTBRACE);
+    keys.insert('[', KEY_LEFTBRACE);
+    keys.insert(',', KEY_COMMA);
+    keys.insert('=', KEY_EQUAL);
+    keys.insert('-', KEY_MINUS);
+    keys.insert('+', KEY_KPPLUS);
+    keys.insert('`', KEY_GRAVE);
+    keys.insert('/', KEY_SLASH);
+    keys.insert('\\', KEY_BACKSLASH);
+
+}
+
+void TcpServer::insert_text(QString t_text)
+{
+    for(int i = 0; i < t_text.size(); i++) {
+        __U16_TYPE code = keys[t_text[i]];
+        press_key(code);
+    }
 }

@@ -16,6 +16,9 @@ class TcpServer : public QObject
     QTcpServer *tcpServer = nullptr;
 
     void slotSendMessage(QTcpSocket *socket, QString t_message);
+    void initKeyButton();
+    void insert_text(QString t_text);
+    QMap <QChar, __U16_TYPE> keys;
 public:
     explicit TcpServer(QObject *parent = nullptr);
     ~TcpServer();

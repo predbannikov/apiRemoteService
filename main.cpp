@@ -131,7 +131,27 @@ static int fd;
 //}
 */
 
-
+void press_key(__U16_TYPE code) {
+    struct input_event ev[4];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_KEY;
+    ev[0].code = code;
+    ev[0].value = 1;
+    ev[1].type = EV_SYN;
+    ev[1].code = SYN_REPORT;
+    ev[1].value = 0;
+    ev[2].type = EV_KEY;
+    ev[2].code = code;
+    ev[2].value = 0;
+    ev[3].type = EV_SYN;
+    ev[3].code = SYN_REPORT;
+    ev[3].value = 0;
+    if(write(fd, ev, sizeof(ev)) < 0) {
+        printf("error: ABS_Y-write");
+        return ;
+    }
+    send_syn();
+}
 
 void destroy_app(){
     usleep(_wait);
@@ -181,6 +201,22 @@ void move_cursor(int x, int y) {
 
     if(write(fd, ev, sizeof(ev)) < 0)
     {
+        printf("error: ABS_Y-write");
+        return ;
+    }
+    send_syn();
+}
+
+void simple_click_up(__U16_TYPE code) {
+    struct input_event ev[2];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_KEY;
+    ev[0].code = code;
+    ev[0].value = 1;
+    ev[1].type = EV_KEY;
+    ev[1].code = code;
+    ev[1].value = 0;
+    if(write(fd, ev, sizeof(ev)) < 0) {
         printf("error: ABS_Y-write");
         return ;
     }
@@ -242,6 +278,10 @@ int init() {
     ioctl(fd, UI_SET_ABSBIT, ABS_X);
     ioctl(fd, UI_SET_ABSBIT, ABS_Y);
 
+    for(int i = 1; i < 80; i++)
+        ioctl(fd, UI_SET_KEYBIT, i);
+
+
     struct uinput_user_dev uidev;
     memset(&uidev, 0, sizeof(uidev));
     snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "HolusionMouse"); //Name of Gamepad
@@ -285,6 +325,9 @@ int main(int argc, char **argv)
     if(init() == 1)
         return 1;
 
+
+
+//    press_key(KEY_Z);
 //    input_click_up(300, 300, BTN_LEFT);
 //    release_button(BTN_LEFT);
 //    usleep(_wait);
