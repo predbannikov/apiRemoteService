@@ -177,7 +177,7 @@ void TcpServer::initKeyButton()
 
 void TcpServer::insert_text(QString t_text)
 {
-    t_text = "hello1234567890-=!@#$%^&*()_+qwertyuiop[]\\|}{asdfghjk,nvxz<>/?";
+//    t_text = "hello1234567890-=!@#$%^&*()_+qwertyuiop[]\\|}{asdfghjk,nvxz<>/?";
     for(int i = 0; i < t_text.size(); i++) {
         QChar qch = t_text[i];
         char ch = qch.toLatin1();
