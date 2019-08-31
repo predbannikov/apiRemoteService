@@ -27,55 +27,57 @@ void TcpServer::slotReadyRead()
 {
     QTcpSocket *socket = qobject_cast<QTcpSocket *>(QObject::sender());
     QByteArray _array = socket->readAll();
-//    QString msg = _array;
-//    qDebug() << qPrintable(_array);
+    QJsonObject _jObjResponse;
     if(_array == "exit")
         this->deleteLater();
-    QJsonObject _jobj = QJsonDocument::fromJson(_array).object();
+    QJsonObject _jObj = QJsonDocument::fromJson(_array).object();
     __U16_TYPE code = BTN_LEFT;
-//    usleep(1000);
-    if(_jobj["action"] == "move_cursor") {
-        move_cursor(_jobj["x"].toInt(), _jobj["y"].toInt());
-        qDebug() << "move_cursor" << _jobj["x"].toInt() << _jobj["y"].toInt();
-    } else if(_jobj["action"] == "input_click") {
-        if(_jobj["TYPE_BUTTON"].toString() == "BTN_LEFT")
-            code = BTN_LEFT;
-        else if(_jobj["TYPE_BUTTON"].toString() == "BTN_RIGHT")
-            code = BTN_RIGHT;
-        input_click(_jobj["x"].toInt(), _jobj["y"].toInt(), code);
-        qDebug() << "input_click" << _jobj["x"].toInt() << _jobj["y"].toInt() << _jobj["TYPE_BUTTON"].toString();
-    } else if(_jobj["action"] == "simple_click_up") {
-        if(_jobj["TYPE_BUTTON"].toString() == "BTN_LEFT")
-            code = BTN_LEFT;
-        else if(_jobj["TYPE_BUTTON"].toString() == "BTN_RIGHT")
-            code = BTN_RIGHT;
-        simple_click_up(code);
-        qDebug() << "input_click" << _jobj["TYPE_BUTTON"].toString();
-    } else if(_jobj["action"] == "input_click_up") {
-        if(_jobj["TYPE_BUTTON"].toString() == "BTN_LEFT")
-            code = BTN_LEFT;
-        else if(_jobj["TYPE_BUTTON"].toString() == "BTN_RIGHT")
-            code = BTN_RIGHT;
-        input_click_up(_jobj["x"].toInt(), _jobj["y"].toInt(), code);
-        qDebug() << "input_click" << _jobj["x"].toInt() << _jobj["y"].toInt() << _jobj["TYPE_BUTTON"].toString();
-    } else if(_jobj["action"] == "release_button") {
-        if(_jobj["TYPE_BUTTON"].toString() == "BTN_LEFT")
-            code = BTN_LEFT;
-        else if(_jobj["TYPE_BUTTON"].toString() == "BTN_RIGHT")
-            code = BTN_RIGHT;
-        release_button(code);
-        qDebug() << "release_button" << _jobj["TYPE_BUTTON"].toString();
-    } else if(_jobj["action"] == "send_syn") {
-        send_syn();
-        qDebug() << "send_syn";
-    } else if(_jobj["action"] == "destroy_app") {
-        destroy_app();
-        qDebug() << "destroy_app";
-    } else if(_jobj["action"] == "insert_text") {
-        insert_text(_jobj["text"].toString());
-        qDebug() << "insert_text" << _jobj["text"].toString();
-    }
 
+    if(_jObj["target"].toString() == "keyboard") {                          // ******** KEYBOARD *********
+        if(_jObj["method"].toString() == "type") {                          // type
+            push_sequence_button(_jObj["text"].toString());
+        } else if(_jObj["method"].toString() == "press") {                  // press
+            press_button_key(keys[_jObj["KEY_BTN"].toVariant().toChar()]);
+        }
+    } else if(_jObj["target"].toString() == "mouse") {                      // ******** MOUSE *********
+        if(_jObj["method"] == "move") {                                     // move
+            mouse_move(_jObj["x"].toInt(), _jObj["y"].toInt());
+        } else if(_jObj["method"].toString() == "move_click") {             // move and click
+            code =_jObj["code"].toString() == "BTN_LEFT" ? BTN_LEFT : BTN_RIGHT;
+            mouse_move_click(_jObj["x"].toInt(), _jObj["y"].toInt(), code);
+        } else if(_jObj["method"].toString() == "click") {                  // click
+            code =_jObj["code"].toString() == "BTN_LEFT" ? BTN_LEFT : BTN_RIGHT;
+            mouse_click(code);
+        } else if(_jObj["method"].toString() == "move_press") {             // move and press
+            code =_jObj["code"].toString() == "BTN_LEFT" ? BTN_LEFT : BTN_RIGHT;
+            mouse_move_press(_jObj["x"].toInt(), _jObj["y"].toInt(), code);
+        } else if(_jObj["method"].toString() == "move_release") {           // move and release
+            code =_jObj["code"].toString() == "BTN_LEFT" ? BTN_LEFT : BTN_RIGHT;
+            mouse_move_release(_jObj["x"].toInt(), _jObj["y"].toInt(), code);
+        }
+    } else if(_jObj["target"].toString() == "server") {                     // ******** SERVER *********
+        if(_jObj["method"].toString() == "destroy") {                       // destroy
+            destroy_app();
+        }
+    } else {
+        _jObjResponse["code"] = "error";
+        socket->write(QJsonDocument(_jObjResponse).toJson());
+        return;
+    }
+    QString _strOut;
+    QStringList _keys = _jObj.keys();
+    for(QString _key: _keys) {
+        if(_key == "target" || _key == "method" || _key == "code") {
+            _strOut.append(_key + ":" +  _jObj[_key].toString() + "\n");
+        } else if(_key == "x" || _key == "y") {
+            _strOut.append(_key + ":" + QString::number(_jObj[_key].toInt()) + "\n");
+        }
+    }
+    qDebug() << qPrintable(_strOut);
+    qDebug() << "counter =" << m_counter << "\n\n";
+    _jObjResponse["code"] = "ok";
+    socket->write(QJsonDocument(_jObjResponse).toJson());
+    m_counter++;
 }
 
 void TcpServer::slotNewConnection()
@@ -183,28 +185,61 @@ void TcpServer::insert_text(QString t_text)
         char ch = qch.toLatin1();
         switch (ch) {
         case '!':
-            press_shift_key(KEY_1); break;
+            push_shift_key_button(KEY_1); break;
         case '@':
-            press_shift_key(KEY_2); break;
+            push_shift_key_button(KEY_2); break;
         case '#':
-            press_shift_key(KEY_3); break;
+            push_shift_key_button(KEY_3); break;
         case '$':
-            press_shift_key(KEY_4); break;
+            push_shift_key_button(KEY_4); break;
         case '%':
-            press_shift_key(KEY_5); break;
+            push_shift_key_button(KEY_5); break;
         case '^':
-            press_shift_key(KEY_6); break;
+            push_shift_key_button(KEY_6); break;
         case '&':
-            press_shift_key(KEY_7); break;
+            push_shift_key_button(KEY_7); break;
         case '(':
-            press_shift_key(KEY_9); break;
+            push_shift_key_button(KEY_9); break;
         case ')':
-            press_shift_key(KEY_0); break;
+            push_shift_key_button(KEY_0); break;
         case '_':
-            press_shift_key(KEY_MINUS); break;
+            push_shift_key_button(KEY_MINUS); break;
         default:
             __U16_TYPE code = keys[t_text[i]];
-            press_key(code);
+            push_key_button(code);
+        }
+    }
+}
+
+void TcpServer::push_sequence_button(QString t_buttons)
+{
+    for(int i = 0; i < t_buttons.size(); i++) {
+        QChar qch = t_buttons[i];
+        char ch = qch.toLatin1();
+        switch (ch) {
+        case '!':
+            push_shift_key_button(KEY_1); break;
+        case '@':
+            push_shift_key_button(KEY_2); break;
+        case '#':
+            push_shift_key_button(KEY_3); break;
+        case '$':
+            push_shift_key_button(KEY_4); break;
+        case '%':
+            push_shift_key_button(KEY_5); break;
+        case '^':
+            push_shift_key_button(KEY_6); break;
+        case '&':
+            push_shift_key_button(KEY_7); break;
+        case '(':
+            push_shift_key_button(KEY_9); break;
+        case ')':
+            push_shift_key_button(KEY_0); break;
+        case '_':
+            push_shift_key_button(KEY_MINUS); break;
+        default:
+            __U16_TYPE code = keys[t_buttons[i]];
+            push_key_button(code);
         }
     }
 }

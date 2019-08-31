@@ -10,16 +10,18 @@
 #include <linux/uinput.h>
 
 void send_syn();
-void release_button(__U16_TYPE code = BTN_LEFT);
-void move_cursor(int x, int y);
-void input_click(int x, int y, __U16_TYPE code = BTN_LEFT);
-void input_click_up(int x, int y, __U16_TYPE code);
-void simple_click_up(__U16_TYPE code);
-
-void press_key(__U16_TYPE code);
-void press_shift_key(__U16_TYPE code);
-
 void destroy_app();
+
+void push_shift_key_button(__U16_TYPE code);
+void push_key_button(__U16_TYPE code);
+void press_button_key(__U16_TYPE code);
+void release_button_key(__U16_TYPE code);
+void mouse_click(__U16_TYPE code);
+void mouse_move_click(int x, int y, __U16_TYPE code = BTN_LEFT);
+void mouse_move_press(int x, int y, __U16_TYPE code = BTN_LEFT);
+void mouse_move_release(int x, int y, __U16_TYPE code = BTN_LEFT);
+void mouse_move(int x, int y);
+
 const int _wait = 500000;
 
 #endif // MAIN_H
