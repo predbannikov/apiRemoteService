@@ -38,6 +38,8 @@ void TcpServer::slotReadyRead()
             push_sequence_button(_jObj["text"].toString());
         } else if(_jObj["method"].toString() == "press") {                  // press
             press_button_key(keys[_jObj["KEY_BTN"].toVariant().toChar()]);
+        } else if(_jObj["method"].toString() == "release") {                // release
+            release_button_key(keys[_jObj["KEY_BTN"].toVariant().toChar()]);
         }
     } else if(_jObj["target"].toString() == "mouse") {                      // ******** MOUSE *********
         if(_jObj["method"] == "move") {                                     // move
@@ -67,7 +69,7 @@ void TcpServer::slotReadyRead()
     QString _strOut;
     QStringList _keys = _jObj.keys();
     for(QString _key: _keys) {
-        if(_key == "target" || _key == "method" || _key == "code") {
+        if(_key == "target" || _key == "method" || _key == "code" || _key == "text") {
             _strOut.append(_key + ":" +  _jObj[_key].toString() + "\n");
         } else if(_key == "x" || _key == "y") {
             _strOut.append(_key + ":" + QString::number(_jObj[_key].toInt()) + "\n");
