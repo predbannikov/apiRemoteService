@@ -15,6 +15,7 @@ TcpServer::TcpServer(QObject *parent) : QObject(parent)
                 .arg(tcpServer->serverAddress().toString()).arg(tcpServer->serverPort()));
 
     initKeyButton();
+    initFKeyButton();
     insert_text("");
 }
 
@@ -36,10 +37,18 @@ void TcpServer::slotReadyRead()
     if(_jObj["target"].toString() == "keyboard") {                          // ******** KEYBOARD *********
         if(_jObj["method"].toString() == "type") {                          // type
             push_sequence_button(_jObj["text"].toString());
+        } else if(_jObj["method"].toString() == "push_f") {                 // push functional key
+            push_F_button(_jObj["f_code"].toString());
+        } else if(_jObj["method"].toString() == "press_f") {                // press functional key
+            press_F_button(_jObj["f_code"].toString());
+        } else if(_jObj["method"].toString() == "release_f") {              // release functional key
+            release_F_button(_jObj["f_code"].toString());
         } else if(_jObj["method"].toString() == "press") {                  // press
-            press_button_key(keys[_jObj["KEY_BTN"].toVariant().toChar()]);
+            QChar _qch = _jObj["code"].toString()[0];
+            press_button_key(keys[_qch]);
         } else if(_jObj["method"].toString() == "release") {                // release
-            release_button_key(keys[_jObj["KEY_BTN"].toVariant().toChar()]);
+            QChar _qch = _jObj["code"].toString()[0];
+            release_button_key(keys[_qch]);
         }
     } else if(_jObj["target"].toString() == "mouse") {                      // ******** MOUSE *********
         if(_jObj["method"] == "move") {                                     // move
@@ -179,6 +188,30 @@ void TcpServer::initKeyButton()
 
 }
 
+void TcpServer::initFKeyButton()
+{
+    m_Fkeys.insert("KEY_F1", KEY_F1);
+    m_Fkeys.insert("KEY_F2", KEY_F2);
+    m_Fkeys.insert("KEY_F3", KEY_F3);
+    m_Fkeys.insert("KEY_F4", KEY_F4);
+    m_Fkeys.insert("KEY_F5", KEY_F5);
+    m_Fkeys.insert("KEY_F6", KEY_F6);
+    m_Fkeys.insert("KEY_F7", KEY_F7);
+    m_Fkeys.insert("KEY_F8", KEY_F8);
+    m_Fkeys.insert("KEY_F9", KEY_F9);
+    m_Fkeys.insert("KEY_F10", KEY_F10);
+    m_Fkeys.insert("KEY_F11", KEY_F11);
+    m_Fkeys.insert("KEY_F12", KEY_F12);
+    m_Fkeys.insert("KEY_LEFT", KEY_LEFT);
+    m_Fkeys.insert("KEY_RIGHT", KEY_RIGHT);
+    m_Fkeys.insert("KEY_UP", KEY_UP);
+    m_Fkeys.insert("KEY_DOWN", KEY_DOWN);
+    m_Fkeys.insert("KEY_PAGEUP", KEY_PAGEUP);
+    m_Fkeys.insert("KEY_PAGEDOWN", KEY_PAGEDOWN);
+    m_Fkeys.insert("KEY_ESC", KEY_ESC);
+    m_Fkeys.insert("KEY_ENTER", KEY_ENTER);
+}
+
 void TcpServer::insert_text(QString t_text)
 {
 //    t_text = "hello1234567890-=!@#$%^&*()_+qwertyuiop[]\\|}{asdfghjk,nvxz<>/?";
@@ -246,3 +279,20 @@ void TcpServer::push_sequence_button(QString t_buttons)
     }
 }
 
+void TcpServer::push_F_button(QString t_buttons)
+{
+    __U16_TYPE code = m_Fkeys[t_buttons];
+    push_key_button(code);
+}
+
+void TcpServer::press_F_button(QString t_buttons)
+{
+    __U16_TYPE code = m_Fkeys[t_buttons];
+    press_button_key(code);
+}
+
+void TcpServer::release_F_button(QString t_buttons)
+{
+    __U16_TYPE code = m_Fkeys[t_buttons];
+    release_button_key(code);
+}
