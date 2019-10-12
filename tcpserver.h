@@ -11,6 +11,22 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 
+#ifdef __linux__
+#include <linux/uinput.h>
+#include <X11/Xlib.h>
+static int fd;
+typedef unsigned __int16 __U16_TYPE;
+
+
+#elif _WIN32
+#include <windows.h>
+#include <QApplication>
+#include <QScreen>
+static INPUT buffer[1];
+static QSize sizeScreen;
+typedef DWORD __U16_TYPE;
+#endif
+
 class TcpServer : public QObject
 {
     Q_OBJECT

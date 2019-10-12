@@ -32,11 +32,20 @@ void TcpServer::slotReadyRead()
     if(_array == "exit")
         this->deleteLater();
     QJsonObject _jObj = QJsonDocument::fromJson(_array).object();
+#ifdef __linux__
     __U16_TYPE code = BTN_LEFT;
+#elif _WIN32
+    __U16_TYPE code = MOUSEEVENTF_LEFTDOWN;
+#endif
+
+#ifdef __linux__
+#elif _WIN32
+#endif
+
 
     if(_jObj["target"].toString() == "keyboard") {                          // ******** KEYBOARD *********
         if(_jObj["method"].toString() == "type") {                          // type
-            push_sequence_button(_jObj["text"].toString());
+            push_sequence_button(_jObj["text"].toString()); //!
         } else if(_jObj["method"].toString() == "push_f") {                 // push functional key
             push_F_button(_jObj["f_code"].toString());
         } else if(_jObj["method"].toString() == "press_f") {                // press functional key
@@ -54,16 +63,32 @@ void TcpServer::slotReadyRead()
         if(_jObj["method"] == "move") {                                     // move
             mouse_move(_jObj["x"].toInt(), _jObj["y"].toInt());
         } else if(_jObj["method"].toString() == "move_click") {             // move and click
+#ifdef __linux__
             code =_jObj["code"].toString() == "BTN_LEFT" ? BTN_LEFT : BTN_RIGHT;
+#elif _WIN32
+            code =_jObj["code"].toString() == "BTN_LEFT" ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_RIGHTDOWN;
+#endif
             mouse_move_click(_jObj["x"].toInt(), _jObj["y"].toInt(), code);
         } else if(_jObj["method"].toString() == "click") {                  // click
+#ifdef __linux__
             code =_jObj["code"].toString() == "BTN_LEFT" ? BTN_LEFT : BTN_RIGHT;
+#elif _WIN32
+            code =_jObj["code"].toString() == "BTN_LEFT" ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_RIGHTDOWN;
+#endif
             mouse_click(code);
         } else if(_jObj["method"].toString() == "move_press") {             // move and press
+#ifdef __linux__
             code =_jObj["code"].toString() == "BTN_LEFT" ? BTN_LEFT : BTN_RIGHT;
+#elif _WIN32
+            code =_jObj["code"].toString() == "BTN_LEFT" ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_RIGHTDOWN;
+#endif
             mouse_move_press(_jObj["x"].toInt(), _jObj["y"].toInt(), code);
         } else if(_jObj["method"].toString() == "move_release") {           // move and release
+#ifdef __linux__
             code =_jObj["code"].toString() == "BTN_LEFT" ? BTN_LEFT : BTN_RIGHT;
+#elif _WIN32
+            code =_jObj["code"].toString() == "BTN_LEFT" ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_RIGHTDOWN;
+#endif
             mouse_move_release(_jObj["x"].toInt(), _jObj["y"].toInt(), code);
         }
     } else if(_jObj["target"].toString() == "server") {                     // ******** SERVER *********
@@ -108,7 +133,7 @@ void TcpServer::slotSendMessage(QTcpSocket *socket, QString t_message)
 
 void TcpServer::initKeyButton()
 {
-
+#ifdef __linux__
     keys.insert('0', KEY_0);
     keys.insert('1', KEY_1);
     keys.insert('2', KEY_2);
@@ -185,11 +210,91 @@ void TcpServer::initKeyButton()
     keys.insert('`', KEY_GRAVE);
     keys.insert('/', KEY_SLASH);
     keys.insert('\\', KEY_BACKSLASH);
+#elif _WIN32
+    keys.insert('0', 0x30);
+    keys.insert('1', 0x31);
+    keys.insert('2', 0x32);
+    keys.insert('3', 0x33);
+    keys.insert('4', 0x34);
+    keys.insert('5', 0x35);
+    keys.insert('6', 0x36);
+    keys.insert('7', 0x37);
+    keys.insert('8', 0x38);
+    keys.insert('9', 0x39);
+//    keys.insert('Q', KEY_Q);
+//    keys.insert('q', KEY_Q);
+//    keys.insert('W', KEY_W);
+//    keys.insert('w', KEY_W);
+//    keys.insert('E', KEY_E);
+//    keys.insert('e', KEY_E);
+//    keys.insert('R', KEY_R);
+//    keys.insert('r', KEY_R);
+//    keys.insert('T', KEY_T);
+//    keys.insert('t', KEY_T);
+//    keys.insert('Y', KEY_Y);
+//    keys.insert('y', KEY_Y);
+//    keys.insert('U', KEY_U);
+//    keys.insert('u', KEY_U);
+//    keys.insert('I', KEY_I);
+//    keys.insert('i', KEY_I);
+//    keys.insert('O', KEY_O);
+//    keys.insert('o', KEY_O);
+//    keys.insert('P', KEY_P);
+//    keys.insert('p', KEY_P);
+//    keys.insert('a', KEY_A);
+//    keys.insert('A', KEY_A);
+//    keys.insert('s', KEY_S);
+//    keys.insert('S', KEY_S);
+//    keys.insert('d', KEY_D);
+//    keys.insert('D', KEY_D);
+//    keys.insert('F', KEY_F);
+//    keys.insert('f', KEY_F);
+//    keys.insert('G', KEY_G);
+//    keys.insert('g', KEY_G);
+//    keys.insert('h', KEY_H);
+//    keys.insert('H', KEY_H);
+//    keys.insert('j', KEY_J);
+//    keys.insert('J', KEY_J);
+//    keys.insert('k', KEY_K);
+//    keys.insert('K', KEY_K);
+//    keys.insert('L', KEY_L);
+//    keys.insert('l', KEY_L);
+//    keys.insert('z', KEY_Z);
+//    keys.insert('Z', KEY_Z);
+//    keys.insert('X', KEY_X);
+//    keys.insert('x', KEY_X);
+//    keys.insert('C', KEY_C);
+//    keys.insert('c', KEY_C);
+//    keys.insert('V', KEY_V);
+//    keys.insert('v', KEY_V);
+//    keys.insert('B', KEY_B);
+//    keys.insert('b', KEY_B);
+//    keys.insert('N', KEY_N);
+//    keys.insert('n', KEY_N);
+//    keys.insert('M', KEY_M);
+//    keys.insert('m', KEY_M);
+//    keys.insert(' ', KEY_SPACE);
+//    keys.insert('.', KEY_DOT);
+//    keys.insert('*', KEY_KPASTERISK);
+//    keys.insert('\'', KEY_APOSTROPHE);
+//    keys.insert(';', KEY_SEMICOLON);
+//    keys.insert(']', KEY_RIGHTBRACE);
+//    keys.insert('[', KEY_LEFTBRACE);
+//    keys.insert(',', KEY_COMMA);
+//    keys.insert('=', KEY_EQUAL);
+//    keys.insert('-', KEY_MINUS);
+//    keys.insert('+', KEY_KPPLUS);
+//    keys.insert('`', KEY_GRAVE);
+//    keys.insert('/', KEY_SLASH);
+//    keys.insert('\\', KEY_BACKSLASH);
+#endif
+
 
 }
 
 void TcpServer::initFKeyButton()
 {
+#ifdef __linux__
     m_Fkeys.insert("KEY_F1", KEY_F1);
     m_Fkeys.insert("KEY_F2", KEY_F2);
     m_Fkeys.insert("KEY_F3", KEY_F3);
@@ -210,73 +315,76 @@ void TcpServer::initFKeyButton()
     m_Fkeys.insert("KEY_PAGEDOWN", KEY_PAGEDOWN);
     m_Fkeys.insert("KEY_ESC", KEY_ESC);
     m_Fkeys.insert("KEY_ENTER", KEY_ENTER);
+#elif _WIN32
+
+#endif
 }
 
 void TcpServer::insert_text(QString t_text)
 {
 //    t_text = "hello1234567890-=!@#$%^&*()_+qwertyuiop[]\\|}{asdfghjk,nvxz<>/?";
-    for(int i = 0; i < t_text.size(); i++) {
-        QChar qch = t_text[i];
-        char ch = qch.toLatin1();
-        switch (ch) {
-        case '!':
-            push_shift_key_button(KEY_1); break;
-        case '@':
-            push_shift_key_button(KEY_2); break;
-        case '#':
-            push_shift_key_button(KEY_3); break;
-        case '$':
-            push_shift_key_button(KEY_4); break;
-        case '%':
-            push_shift_key_button(KEY_5); break;
-        case '^':
-            push_shift_key_button(KEY_6); break;
-        case '&':
-            push_shift_key_button(KEY_7); break;
-        case '(':
-            push_shift_key_button(KEY_9); break;
-        case ')':
-            push_shift_key_button(KEY_0); break;
-        case '_':
-            push_shift_key_button(KEY_MINUS); break;
-        default:
-            __U16_TYPE code = keys[t_text[i]];
-            push_key_button(code);
-        }
-    }
+//    for(int i = 0; i < t_text.size(); i++) {
+//        QChar qch = t_text[i];
+//        char ch = qch.toLatin1();
+//        switch (ch) {
+//        case '!':
+//            push_shift_key_button(KEY_1); break;
+//        case '@':
+//            push_shift_key_button(KEY_2); break;
+//        case '#':
+//            push_shift_key_button(KEY_3); break;
+//        case '$':
+//            push_shift_key_button(KEY_4); break;
+//        case '%':
+//            push_shift_key_button(KEY_5); break;
+//        case '^':
+//            push_shift_key_button(KEY_6); break;
+//        case '&':
+//            push_shift_key_button(KEY_7); break;
+//        case '(':
+//            push_shift_key_button(KEY_9); break;
+//        case ')':
+//            push_shift_key_button(KEY_0); break;
+//        case '_':
+//            push_shift_key_button(KEY_MINUS); break;
+//        default:
+//            __U16_TYPE code = keys[t_text[i]];
+//            push_key_button(code);
+//        }
+//    }
 }
 
 void TcpServer::push_sequence_button(QString t_buttons)
 {
-    for(int i = 0; i < t_buttons.size(); i++) {
-        QChar qch = t_buttons[i];
-        char ch = qch.toLatin1();
-        switch (ch) {
-        case '!':
-            push_shift_key_button(KEY_1); break;
-        case '@':
-            push_shift_key_button(KEY_2); break;
-        case '#':
-            push_shift_key_button(KEY_3); break;
-        case '$':
-            push_shift_key_button(KEY_4); break;
-        case '%':
-            push_shift_key_button(KEY_5); break;
-        case '^':
-            push_shift_key_button(KEY_6); break;
-        case '&':
-            push_shift_key_button(KEY_7); break;
-        case '(':
-            push_shift_key_button(KEY_9); break;
-        case ')':
-            push_shift_key_button(KEY_0); break;
-        case '_':
-            push_shift_key_button(KEY_MINUS); break;
-        default:
-            __U16_TYPE code = keys[t_buttons[i]];
-            push_key_button(code);
-        }
-    }
+//    for(int i = 0; i < t_buttons.size(); i++) {
+//        QChar qch = t_buttons[i];
+//        char ch = qch.toLatin1();
+//        switch (ch) {
+//        case '!':
+//            push_shift_key_button(KEY_1); break;
+//        case '@':
+//            push_shift_key_button(KEY_2); break;
+//        case '#':
+//            push_shift_key_button(KEY_3); break;
+//        case '$':
+//            push_shift_key_button(KEY_4); break;
+//        case '%':
+//            push_shift_key_button(KEY_5); break;
+//        case '^':
+//            push_shift_key_button(KEY_6); break;
+//        case '&':
+//            push_shift_key_button(KEY_7); break;
+//        case '(':
+//            push_shift_key_button(KEY_9); break;
+//        case ')':
+//            push_shift_key_button(KEY_0); break;
+//        case '_':
+//            push_shift_key_button(KEY_MINUS); break;
+//        default:
+//            __U16_TYPE code = keys[t_buttons[i]];
+//            push_key_button(code);
+//        }
+//    }
 }
 
 void TcpServer::push_F_button(QString t_buttons)

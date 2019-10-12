@@ -1,8 +1,8 @@
 TEMPLATE = app
-QT += core network
-QT -= gui
-CONFIG += console c++14
-CONFIG -= app_bundle
+QT += core widgets network gui
+#QT -= gui
+CONFIG += c++14
+#CONFIG -= app_bundle
 #CONFIG -= qt
 
 
@@ -13,7 +13,7 @@ SOURCES += \
         tcpserver.cpp
 
 #LIBS += -lpthread
-LIBS += -lX11
+#LIBS += -lX11
 
 
 HEADERS += \
