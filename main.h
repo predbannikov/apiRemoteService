@@ -29,5 +29,3 @@ void mouse_move(int x, int y);
 const int _wait = 500000;
 
 #endif // MAIN_H
-
-// bla bla
