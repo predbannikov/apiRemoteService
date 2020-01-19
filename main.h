@@ -24,9 +24,8 @@ void mouse_click(__U16_TYPE code);
 void mouse_move_click(int x, int y, __U16_TYPE code);
 void mouse_move_press(int x, int y, __U16_TYPE code);
 void mouse_move_release(int x, int y, __U16_TYPE code);
-void mouse_move(int x, int y);
+void mouse_move(int x, int y, QString rel = "");
 
 const int _wait = 500000;
 
 #endif // MAIN_H
-

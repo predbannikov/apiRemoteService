@@ -74,133 +74,323 @@ void push_key_button(__U16_TYPE code) {
 //        return ;
 //    }
 }
+
+BOOL CALLBACK speichereFenster(HWND hwnd, LPARAM lParam){
+    const DWORD TITLE_SIZE = 1024;
+    WCHAR windowTitle[TITLE_SIZE];
+
+    GetWindowTextW(hwnd, windowTitle, TITLE_SIZE);
+
+    int length = ::GetWindowTextLength(hwnd);
+    wstring title(&windowTitle[0]);
+    if (!IsWindowVisible(hwnd) || length == 0 || title == L"Program Manager") {
+        return TRUE;
+    }
+
+    // Retrieve the pointer passed into this callback, and re-'type' it.
+    // The only way for a C API to pass arbitrary data is by means of a void*.
+    std::vector<std::wstring>& titles =
+                              *reinterpret_cast<std::vector<std::wstring>*>(lParam);
+    titles.push_back(title);
+
+    return TRUE;
+}
+
 void press_button_key(__U16_TYPE code) {
-//    struct input_event ev[2];
-//    memset(&ev, 0, sizeof(ev));
-//    ev[0].type = EV_KEY;
-//    ev[0].code = code;
-//    ev[0].value = 1;
-//    ev[1].type = EV_SYN;
-//    ev[1].code = SYN_REPORT;
-//    ev[1].value = 0;
-//    if(write(fd, ev, sizeof(ev)) < 0) {
-//        printf("error: sync-report");
-//        return ;
+#ifdef __linux__
+    struct input_event ev[2];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_KEY;
+    ev[0].code = code;
+    ev[0].value = 1;
+    ev[1].type = EV_SYN;
+    ev[1].code = SYN_REPORT;
+    ev[1].value = 0;
+    if(write(fd, ev, sizeof(ev)) < 0) {
+        printf("error: sync-report");
+        return ;
+    }
+#elif _WIN32
+
+
+
+//    keybd_event('A', 0,0,0);
+//    keybd_event('A', 0,KEYEVENTF_KEYUP,0);
+
+
+    const UINT mappedKey = MapVirtualKey( code, 0 );
+    INPUT buffer = {0};
+    buffer.type = INPUT_KEYBOARD;
+    buffer.ki.wVk = 0;
+    buffer.ki.wScan = mappedKey;
+    buffer.ki.dwFlags = KEYEVENTF_SCANCODE;
+    buffer.ki.time = 0;
+    buffer.ki.dwExtraInfo = 0;
+    SendInput(1, &buffer, sizeof(INPUT));
+
+
+
+
+//    INPUT buffer = {0};
+//    buffer.type = INPUT_KEYBOARD;
+//    buffer.ki = {0};
+//    buffer.ki.wVk = static_cast<WORD>(code);
+//    buffer.ki.wScan = 0;
+//    buffer.ki.dwFlags = 0;
+//    buffer.ki.time = 0;
+//    buffer.ki.dwExtraInfo = 0;
+//    SendInput(1, &buffer, sizeof(INPUT));
+
+
+//    std::vector<std::wstring> titles;
+//    EnumWindows(speichereFenster, reinterpret_cast<LPARAM>(&titles));
+//    // Ast this point, titles if fully populated and could be displayed, e.g.:
+//    for ( const auto& title : titles ) {
+//        QString test = QString::fromWCharArray( title.c_str() );
+//        qDebug() << test;
 //    }
+
+//    auto window = FindWindowA(NULL, "Black Desert - 346125");
+
+//    DWORD key = static_cast<DWORD>('W');
+//    SendMessage(window, WM_KEYDOWN, key, 0);
+//    SendMessage(window, WM_CHAR, key, 1);
+//    SendMessage(window, WM_KEYUP, key, 1);
+
+
+//    buffer.ki.dwFlags = KEYEVENTF_KEYUP;
+//    SendInput(1, &buffer, sizeof(INPUT));
+
+
+
+    qDebug() << "press_button_key";
+#endif
 }
 
 void release_button_key(__U16_TYPE code) {
-//    struct input_event ev[2];
-//    memset(&ev, 0, sizeof(ev));
-//    ev[0].type = EV_KEY;
-//    ev[0].code = code;
-//    ev[0].value = 0;
-//    ev[1].type = EV_SYN;
-//    ev[1].code = SYN_REPORT;
-//    ev[1].value = 0;
-//    if(write(fd, ev, sizeof(ev)) < 0) {
-//        printf("error: sync-report");
-//        return ;
-//    }
+#ifdef __linux__
+    struct input_event ev[2];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_KEY;
+    ev[0].code = code;
+    ev[0].value = 0;
+    ev[1].type = EV_SYN;
+    ev[1].code = SYN_REPORT;
+    ev[1].value = 0;
+    if(write(fd, ev, sizeof(ev)) < 0) {
+        printf("error: sync-report");
+        return ;
+    }
+#elif _WIN32
+    const UINT mappedKey = MapVirtualKey( code, 0 );
+    INPUT buffer = {0};
+    buffer.type = INPUT_KEYBOARD;
+    buffer.ki.wVk = 0;
+    buffer.ki.wScan = mappedKey;
+    buffer.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+    buffer.ki.time = 0;
+    buffer.ki.dwExtraInfo = 0;
+    SendInput(1, &buffer, sizeof(INPUT));
+    qDebug() << "release_button_key";
+#endif
 }
 
 
 void mouse_click(__U16_TYPE code) {
-//    struct input_event ev[4];
-//    memset(&ev, 0, sizeof(ev));
-//    ev[0].type = EV_KEY;
-//    ev[0].code = code;
-//    ev[0].value = 1;
-//    ev[1].type = EV_SYN;
-//    ev[1].code = SYN_REPORT;
-//    ev[1].value = 0;
-//    ev[2].type = EV_KEY;
-//    ev[2].code = code;
-//    ev[2].value = 0;
-//    ev[3].type = EV_SYN;
-//    ev[3].code = SYN_REPORT;
-//    ev[3].value = 0;
-//    if(write(fd, ev, sizeof(ev)) < 0) {
-//        printf("error: ABS_Y-write");
-//        return ;
-//    }
+
+#ifdef __linux__
+    struct input_event ev[4];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_KEY;
+    ev[0].code = code;
+    ev[0].value = 1;
+    ev[1].type = EV_SYN;
+    ev[1].code = SYN_REPORT;
+    ev[1].value = 0;
+    ev[2].type = EV_KEY;
+    ev[2].code = code;
+    ev[2].value = 0;
+    ev[3].type = EV_SYN;
+    ev[3].code = SYN_REPORT;
+    ev[3].value = 0;
+    if(write(fd, ev, sizeof(ev)) < 0) {
+        printf("error: ABS_Y-write");
+        return ;
+    }
+#elif _WIN32
+    INPUT buffer = {0};
+    buffer.type = INPUT_MOUSE;
+    buffer.mi.mouseData = 0;
+    buffer.mi.time = 0;
+    buffer.mi.dwExtraInfo = 0;
+    if(code == MOUSEEVENTF_LEFTDOWN) {
+        buffer.mi.dwFlags = code;
+        SendInput(1, &buffer, sizeof(buffer));
+        QThread::msleep(15);
+        buffer.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+        SendInput(1, &buffer, sizeof(buffer));
+    } else if (code == MOUSEEVENTF_RIGHTDOWN) {
+        buffer.mi.dwFlags = code;
+        SendInput(1, &buffer, sizeof(buffer));
+        QThread::msleep(15);
+        buffer.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+        SendInput(1, &buffer, sizeof(buffer));
+    }
+    qDebug() << "mouse_click";
+#endif
+
 }
 
 void mouse_move_click(int x, int y, __U16_TYPE code) {
-//    struct input_event ev[7];
-//    memset(&ev, 0, sizeof(ev));
-//    ev[0].type = EV_ABS;
-//    ev[0].code = ABS_X;
-//    ev[0].value = x;
-//    ev[1].type = EV_ABS;
-//    ev[1].code = ABS_Y;
-//    ev[1].value = y ;
-//    ev[2].type = EV_SYN;
-//    ev[2].code = SYN_REPORT;
-//    ev[2].value = 0;
-//    ev[3].type = EV_KEY;
-//    ev[3].code = code;
-//    ev[3].value = 1;
-//    ev[4].type = EV_SYN;
-//    ev[4].code = SYN_REPORT;
-//    ev[4].value = 0;
-//    ev[5].type = EV_KEY;
-//    ev[5].code = code;
-//    ev[5].value = 0;
-//    ev[6].type = EV_SYN;
-//    ev[6].code = SYN_REPORT;
-//    ev[6].value = 0;
+#ifdef __linux__
+    struct input_event ev[7];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_ABS;
+    ev[0].code = ABS_X;
+    ev[0].value = x;
+    ev[1].type = EV_ABS;
+    ev[1].code = ABS_Y;
+    ev[1].value = y ;
+    ev[2].type = EV_SYN;
+    ev[2].code = SYN_REPORT;
+    ev[2].value = 0;
+    ev[3].type = EV_KEY;
+    ev[3].code = code;
+    ev[3].value = 1;
+    ev[4].type = EV_SYN;
+    ev[4].code = SYN_REPORT;
+    ev[4].value = 0;
+    ev[5].type = EV_KEY;
+    ev[5].code = code;
+    ev[5].value = 0;
+    ev[6].type = EV_SYN;
+    ev[6].code = SYN_REPORT;
+    ev[6].value = 0;
 
-//    if(write(fd, ev, sizeof(ev)) < 0) {
-//        printf("error: ABS_Y-write");
-//        return ;
-//    }
+    if(write(fd, ev, sizeof(ev)) < 0) {
+        printf("error: ABS_Y-write");
+        return ;
+    }
+#elif _WIN32
+    INPUT buffer = {0};
+    buffer.type = INPUT_MOUSE;
+    buffer.mi.mouseData = 0;
+    buffer.mi.time = 0;
+    buffer.mi.dwExtraInfo = 0;
+    buffer.mi.dx = (x * (0xFFFF / sizeScreen.width()));
+    buffer.mi.dy = (y * (0xFFFF / sizeScreen.height()));
+    buffer.mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE);
+    SendInput(1, &buffer, sizeof(INPUT));
+
+    if(code == MOUSEEVENTF_LEFTDOWN) {
+        buffer.mi.dwFlags = code;
+        SendInput(1, &buffer, sizeof(buffer));
+        QThread::msleep(15);
+        buffer.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+        SendInput(1, &buffer, sizeof(buffer));
+    } else if (code == MOUSEEVENTF_RIGHTDOWN) {
+        buffer.mi.dwFlags = code;
+        SendInput(1, &buffer, sizeof(buffer));
+        QThread::msleep(15);
+        buffer.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+        SendInput(1, &buffer, sizeof(buffer));
+    }
+    qDebug() << "mouse_move_click";
+
+#endif
+
 }
 
 void mouse_move_press(int x, int y, __U16_TYPE code) {
-//    struct input_event ev[4];
-//    memset(&ev, 0, sizeof(ev));
-//    ev[0].type = EV_ABS;
-//    ev[0].code = ABS_X;
-//    ev[0].value = x;
-//    ev[1].type = EV_ABS;
-//    ev[1].code = ABS_Y;
-//    ev[1].value = y ;
-//    ev[2].type = EV_SYN;
-//    ev[2].code = SYN_REPORT;
-//    ev[2].value = 0;
-//    ev[3].type = EV_KEY;
-//    ev[3].code = code;
-//    ev[3].value = 1;
-//    if(write(fd, ev, sizeof(ev)) < 0) {
-//        printf("error: ABS_Y-write");
-//        return ;
-//    }
+#ifdef __linux__
+    struct input_event ev[4];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_ABS;
+    ev[0].code = ABS_X;
+    ev[0].value = x;
+    ev[1].type = EV_ABS;
+    ev[1].code = ABS_Y;
+    ev[1].value = y ;
+    ev[2].type = EV_SYN;
+    ev[2].code = SYN_REPORT;
+    ev[2].value = 0;
+    ev[3].type = EV_KEY;
+    ev[3].code = code;
+    ev[3].value = 1;
+    if(write(fd, ev, sizeof(ev)) < 0) {
+        printf("error: ABS_Y-write");
+        return ;
+    }
+#elif _WIN32
+    INPUT buffer = {0};
+    buffer.type = INPUT_MOUSE;
+    buffer.mi.mouseData = 0;
+    buffer.mi.time = 0;
+    buffer.mi.dwExtraInfo = 0;
+    buffer.mi.dx = (x * (0xFFFF / sizeScreen.width()));
+    buffer.mi.dy = (y * (0xFFFF / sizeScreen.height()));
+    buffer.mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE);
+    SendInput(1, &buffer, sizeof(INPUT));
+
+    INPUT buffer2 = {0};
+    buffer2.type = INPUT_MOUSE;
+    buffer2.mi.mouseData = 0;
+    buffer2.mi.time = 0;
+    buffer2.mi.dwExtraInfo = 0;
+    buffer2.mi.dwFlags = code;
+    SendInput(1, &buffer2, sizeof(buffer2));
+    qDebug() << "mouse_move_press";
+
+#endif
+
 }
 
 void mouse_move_release(int x, int y, __U16_TYPE code)
 {
-//    struct input_event ev[4];
-//    memset(&ev, 0, sizeof(ev));
-//    ev[0].type = EV_ABS;
-//    ev[0].code = ABS_X;
-//    ev[0].value = x;
-//    ev[1].type = EV_ABS;
-//    ev[1].code = ABS_Y;
-//    ev[1].value = y ;
-//    ev[2].type = EV_SYN;
-//    ev[2].code = SYN_REPORT;
-//    ev[2].value = 0;
-//    ev[3].type = EV_KEY;
-//    ev[3].code = code;
-//    ev[3].value = 0;
-//    if(write(fd, ev, sizeof(ev)) < 0) {
-//        printf("error: ABS_Y-write");
-//        return ;
-//    }
+#ifdef __linux__
+    struct input_event ev[4];
+    memset(&ev, 0, sizeof(ev));
+    ev[0].type = EV_ABS;
+    ev[0].code = ABS_X;
+    ev[0].value = x;
+    ev[1].type = EV_ABS;
+    ev[1].code = ABS_Y;
+    ev[1].value = y ;
+    ev[2].type = EV_SYN;
+    ev[2].code = SYN_REPORT;
+    ev[2].value = 0;
+    ev[3].type = EV_KEY;
+    ev[3].code = code;
+    ev[3].value = 0;
+    if(write(fd, ev, sizeof(ev)) < 0) {
+        printf("error: ABS_Y-write");
+        return ;
+    }
+#elif _WIN32
+    INPUT buffer = {0};
+    buffer.type = INPUT_MOUSE;
+    buffer.mi.mouseData = 0;
+    buffer.mi.time = 0;
+    buffer.mi.dwExtraInfo = 0;
+    buffer.mi.dx = (x * (0xFFFF / sizeScreen.width()));
+    buffer.mi.dy = (y * (0xFFFF / sizeScreen.height()));
+    buffer.mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE);
+    SendInput(1, &buffer, sizeof(INPUT));
+
+    INPUT buffer2 = {0};
+    buffer2.type = INPUT_MOUSE;
+    buffer2.mi.mouseData = 0;
+    buffer2.mi.time = 0;
+    buffer2.mi.dwExtraInfo = 0;
+    buffer2.mi.dwFlags = code;
+    SendInput(1, &buffer2, sizeof(buffer2));
+    qDebug() << "mouse_move_release";
+
+#endif
+
 }
 
-void mouse_move(int x, int y) {
+void mouse_move(int x, int y, QString rel) {
 #ifdef __linux__
     struct input_event ev[3];
     memset(&ev, 0, sizeof(ev));
@@ -220,11 +410,24 @@ void mouse_move(int x, int y) {
         return ;
     }
 #elif _WIN32
-    buffer->mi.dx = (x * (0xFFFF / sizeScreen.width()));
-    buffer->mi.dy = (y * (0xFFFF / sizeScreen.height()));
-    buffer->mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE);
+    INPUT buffer;
+    buffer.type = INPUT_MOUSE;
+    buffer.mi.mouseData = 0;
+    buffer.mi.time = 0;
+    buffer.mi.dwExtraInfo = 0;
+    if(rel == "") {
+        buffer.mi.dx = (x * (0xFFFF / sizeScreen.width()));
+        buffer.mi.dy = (y * (0xFFFF / sizeScreen.height()));
+        buffer.mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE);
+    } else if(rel == "REL"){
+        buffer.mi.dx = x;
+        buffer.mi.dy = y;
+        buffer.mi.dwFlags = MOUSEEVENTF_MOVE;
+    }
 
-    SendInput(1, buffer, sizeof(INPUT));
+    SendInput(1, &buffer, sizeof(INPUT));
+    qDebug() << "mouse_move";
+
 #endif
 }
 
@@ -308,20 +511,20 @@ int init() {
 }
 
 #elif _WIN32
-int init(INPUT *buffer) {
+int init() {
 //    QList<QScreen *> screens;
 
 //    screens = QApplication::screens();
-    QSize sizeScreen = qApp->primaryScreen()->size();
+    sizeScreen = qApp->primaryScreen()->size();
 //    QSize sizeScreen = qApp->screens()[0]->size();
 
-    buffer->type = INPUT_MOUSE;
-    buffer->mi.dx = (0 * (0xFFFF / sizeScreen.width()));
-    buffer->mi.dy = (0 * (0xFFFF / sizeScreen.height()));
-    buffer->mi.mouseData = 0;
-    buffer->mi.dwFlags = MOUSEEVENTF_ABSOLUTE;
-    buffer->mi.time = 0;
-    buffer->mi.dwExtraInfo = 0;
+//    buffer->type = INPUT_MOUSE;
+//    buffer->mi.dx = (0 * (0xFFFF / sizeScreen.width()));
+//    buffer->mi.dy = (0 * (0xFFFF / sizeScreen.height()));
+//    buffer->mi.mouseData = 0;
+//    buffer->mi.dwFlags = MOUSEEVENTF_ABSOLUTE;
+//    buffer->mi.time = 0;
+//    buffer->mi.dwExtraInfo = 0;
     return 0;
 }
 #endif
@@ -339,11 +542,11 @@ int main(int argc, char **argv)
     //    msleep(_wait);
 
 #elif _WIN32
-    if(init(buffer) == 1)
+    if(init() == 1)
         return 1;
 
 
-    mouse_move(100, 100);
+//    mouse_move(100, 100);
 
 #endif
 

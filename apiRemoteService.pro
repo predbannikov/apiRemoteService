@@ -14,6 +14,7 @@ SOURCES += \
 
 #LIBS += -lpthread
 #LIBS += -lX11
+LIBS += -luser32
 
 
 HEADERS += \

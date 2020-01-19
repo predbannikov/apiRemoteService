@@ -22,7 +22,7 @@ typedef unsigned __int16 __U16_TYPE;
 #include <windows.h>
 #include <QApplication>
 #include <QScreen>
-static INPUT buffer[1];
+//static INPUT buffer[1];
 static QSize sizeScreen;
 typedef DWORD __U16_TYPE;
 #endif
@@ -40,8 +40,9 @@ class TcpServer : public QObject
     void push_F_button(QString t_buttons);
     void press_F_button(QString t_buttons);
     void release_F_button(QString t_buttons);
-    QMap <QChar, __U16_TYPE> keys;
+    QMap <QString, __U16_TYPE> keys;
     QMap <QString, __U16_TYPE> m_Fkeys;
+
     int m_counter = 0;
 public:
     explicit TcpServer(QObject *parent = nullptr);
