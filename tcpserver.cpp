@@ -1,7 +1,7 @@
 #include "tcpserver.h"
 #include "main.h"
 
-TcpServer::TcpServer(QObject *parent) : QObject(parent)
+TcpServer::TcpServer(QWidget *parent) : QWidget(parent)
 {
     tcpServer = new QTcpServer(this);
     connect(tcpServer, &QTcpServer::newConnection, this, &TcpServer::slotNewConnection);
@@ -11,17 +11,37 @@ TcpServer::TcpServer(QObject *parent) : QObject(parent)
                               .arg(tcpServer->errorString()));
         return;
     }
-    qDebug() << qPrintable(tr("The server is running on\n\nIP: %1\nport: %2\n\n")
-                .arg(tcpServer->serverAddress().toString()).arg(tcpServer->serverPort()));
 
+    QString str = tr("The server is running on\n\nIP: %1\nport: %2\n\n").arg(tcpServer->serverAddress().toString()).arg(tcpServer->serverPort());
+    qDebug() << qPrintable(str);
+
+
+    vblayout = new QVBoxLayout(this);
+    this->setWindowTitle("server control");
+    text = new QTextEdit(this);
+
+//    this->setLayout(&vbl);
+    vblayout->addWidget(text);
     initKeyButton();
     initFKeyButton();
     insert_text("");
+    text->append(str);
+    QPushButton *btClear = new QPushButton("clear");
+    vblayout->addWidget(btClear);
+    connect(btClear, &QPushButton::clicked, [this] () {
+        text->clear();
+    });
+
 }
 
 TcpServer::~TcpServer()
 {
     destroy_app();
+}
+
+void TcpServer::setText(QString aStr)
+{
+    text->append(aStr);
 }
 
 void TcpServer::slotReadyRead()
@@ -47,20 +67,25 @@ void TcpServer::slotReadyRead()
         if(_jObj["method"].toString() == "type") {                          // type
             push_sequence_button(_jObj["text"].toString()); //!
         } else if(_jObj["method"].toString() == "push_f") {                 // push functional key
-            push_F_button(_jObj["f_code"].toString());
+            push_F_button(_jObj["f_code"].toString(),
+                    static_cast<uint>(_jObj["msec"].toInt()));
         } else if(_jObj["method"].toString() == "press_f") {                // press functional key
             press_F_button(_jObj["f_code"].toString());
         } else if(_jObj["method"].toString() == "release_f") {              // release functional key
             release_F_button(_jObj["f_code"].toString());
-        } else if(_jObj["method"].toString() == "press") {                  // press key
+        } else if(_jObj["method"].toString() == "press_key") {                  // press key
             QChar _qch = _jObj["code"].toString()[0];
             press_button_key(keys[_qch]);
-        } else if(_jObj["method"].toString() == "release") {                // release key
+        } else if(_jObj["method"].toString() == "release_key") {                // release key
             QChar _qch = _jObj["code"].toString()[0];
             release_button_key(keys[_qch]);
+        } else if(_jObj["method"].toString() == "push_key") {                // push key
+            QChar _qch = _jObj["code"].toString()[0];
+//            uint msec = static_cast<uint>(_jObj["msec"].toInt());
+            push_button_key(keys[_qch]);
         }
     } else if(_jObj["target"].toString() == "mouse") {                      // **************** MOUSE *****************
-        if(_jObj["method"].toString() == "move") {                                     // move
+        if(_jObj["method"].toString() == "move") {                          // move
             if(_jObj["move_type"].toString() == "")
                 mouse_move(_jObj["x"].toInt(), _jObj["y"].toInt());
             else if(_jObj["move_type"].toString() == "REL")
@@ -79,6 +104,12 @@ void TcpServer::slotReadyRead()
             code =_jObj["code"].toString() == "BTN_LEFT" ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_RIGHTDOWN;
 #endif
             mouse_click(code);
+        } else if(_jObj["method"].toString() == "wheel") {                  // wheel
+#ifdef __linux__
+#elif _WIN32
+            code = MOUSEEVENTF_WHEEL;
+#endif
+            mouse_wheel(code, _jObj["count"].toInt());
         } else if(_jObj["method"].toString() == "move_press") {             // move and press
 #ifdef __linux__
             code =_jObj["code"].toString() == "BTN_LEFT" ? BTN_LEFT : BTN_RIGHT;
@@ -113,7 +144,7 @@ void TcpServer::slotReadyRead()
         }
     }
     qDebug() << qPrintable(_strOut);
-    qDebug() << "counter =" << m_counter << "\n\n";
+    qDebug() << "\n\n";
     _jObjResponse["code"] = "ok";
     socket->write(QJsonDocument(_jObjResponse).toJson());
     m_counter++;
@@ -275,6 +306,8 @@ void TcpServer::initKeyButton()
     keys.insert("ENTER", KEY_ENTER);
 
 #elif _WIN32
+
+    // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
     // Mouse
     keys.insert("LMB", 0x01); // Left mouse button
@@ -520,14 +553,14 @@ void TcpServer::push_sequence_button(QString t_buttons)
 //    }
 }
 
-void TcpServer::push_F_button(QString t_buttons)
+void TcpServer::push_F_button(QString t_buttons, uint anMSec)
 {
 #ifdef __linux__
     __U16_TYPE code = m_Fkeys[t_buttons];
     push_key_button(code);
 #elif _WIN32
     __U16_TYPE code = keys[t_buttons];
-    push_key_button(code);
+    push_button_key(code, anMSec);
 #endif
 
 }

@@ -14,7 +14,47 @@
 
 using namespace std;
 
+QString logOut;
+TcpServer *server;
 
+
+void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    QByteArray localMsg = msg.toLocal8Bit();
+    server->setText(msg + "\n" + QDateTime::currentDateTime().toString("yy.MM.dd hh:mm:ss") + "\n");
+//        QTextStream out(&logOut);
+//        QString str;
+
+//        switch (type) {
+//            case QtDebugMsg:
+//                fprintf(stderr, "%s\n", localMsg.constData());
+//                str = QString("Debug: %1 (%2:%3, %4)\n").arg(localMsg.constData()).arg(context.file).arg(QString::number(context.line)).arg(context.function);
+//                server->setText(str);
+//                break;
+//            case QtWarningMsg:
+//                fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+//                str = QString("Warning: %1 (%2:%3, %4)\n").arg(localMsg.constData()).arg(context.file).arg(QString::number(context.line)).arg(context.function);
+//                server->setText(str);
+////                logFile.close();
+//                break;
+//            case QtCriticalMsg:
+//                fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+//                str = QString("Critical: %1 (%2:%3, %4)\n").arg(localMsg.constData()).arg(context.file).arg(QString::number(context.line)).arg(context.function);
+//                server->setText(str);
+////                logFile.close();
+//                break;
+//            case QtFatalMsg:
+//                fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+//                str = QString("Fatal: %1 (%2:%3, %4)\n").arg(localMsg.constData()).arg(context.file).arg(QString::number(context.line)).arg(context.function);
+//                server->setText(str);
+//                abort();
+//            default:
+//                out << localMsg.constData();
+////                logFile.close();
+//                break;
+//        }
+
+}
 
 #define BUF_SIZE 1024
 //static int ls;
@@ -54,7 +94,7 @@ void push_shift_key_button(__U16_TYPE code) {
 //    }
 }
 
-void push_key_button(__U16_TYPE code) {
+void push_button_key(__U16_TYPE code, uint anMSec) {
 //    struct input_event ev[4];
 //    memset(&ev, 0, sizeof(ev));
 //    ev[0].type = EV_KEY;
@@ -73,6 +113,9 @@ void push_key_button(__U16_TYPE code) {
 //        printf("error: ABS_Y-write");
 //        return ;
 //    }
+    press_button_key(code);
+    QThread::msleep(anMSec);
+    release_button_key(code);
 }
 
 BOOL CALLBACK speichereFenster(HWND hwnd, LPARAM lParam){
@@ -163,7 +206,7 @@ void press_button_key(__U16_TYPE code) {
 
 
 
-    qDebug() << "press_button_key";
+    qDebug() << "press_button_key" << code;
 #endif
 }
 
@@ -191,7 +234,7 @@ void release_button_key(__U16_TYPE code) {
     buffer.ki.time = 0;
     buffer.ki.dwExtraInfo = 0;
     SendInput(1, &buffer, sizeof(INPUT));
-    qDebug() << "release_button_key";
+    qDebug() << "release_button_key" << code;
 #endif
 }
 
@@ -226,13 +269,13 @@ void mouse_click(__U16_TYPE code) {
     if(code == MOUSEEVENTF_LEFTDOWN) {
         buffer.mi.dwFlags = code;
         SendInput(1, &buffer, sizeof(buffer));
-        QThread::msleep(15);
+        QThread::msleep(MOUSE_CLICK_WAIT);
         buffer.mi.dwFlags = MOUSEEVENTF_LEFTUP;
         SendInput(1, &buffer, sizeof(buffer));
     } else if (code == MOUSEEVENTF_RIGHTDOWN) {
         buffer.mi.dwFlags = code;
         SendInput(1, &buffer, sizeof(buffer));
-        QThread::msleep(15);
+        QThread::msleep(MOUSE_CLICK_WAIT);
         buffer.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
         SendInput(1, &buffer, sizeof(buffer));
     }
@@ -240,6 +283,26 @@ void mouse_click(__U16_TYPE code) {
 #endif
 
 }
+
+
+void mouse_wheel(__U16_TYPE code, int nWheel)
+{
+#ifdef __linux__
+
+#elif _WIN32
+    INPUT buffer = {0};
+    buffer.type = INPUT_MOUSE;
+    buffer.mi.mouseData = nWheel;
+    buffer.mi.time = 0;
+    buffer.mi.dwExtraInfo = 0;
+    if(code == MOUSEEVENTF_WHEEL) {
+        buffer.mi.dwFlags = code;
+        SendInput(1, &buffer, sizeof(buffer));
+    }
+    qDebug() << "mouse_wheel";
+#endif
+}
+
 
 void mouse_move_click(int x, int y, __U16_TYPE code) {
 #ifdef __linux__
@@ -281,17 +344,18 @@ void mouse_move_click(int x, int y, __U16_TYPE code) {
     buffer.mi.dy = (y * (0xFFFF / sizeScreen.height()));
     buffer.mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE);
     SendInput(1, &buffer, sizeof(INPUT));
+    QThread::msleep(MOUSE_MOVE_WAIT);
 
     if(code == MOUSEEVENTF_LEFTDOWN) {
         buffer.mi.dwFlags = code;
         SendInput(1, &buffer, sizeof(buffer));
-        QThread::msleep(15);
+        QThread::msleep(MOUSE_CLICK_WAIT);
         buffer.mi.dwFlags = MOUSEEVENTF_LEFTUP;
         SendInput(1, &buffer, sizeof(buffer));
     } else if (code == MOUSEEVENTF_RIGHTDOWN) {
         buffer.mi.dwFlags = code;
         SendInput(1, &buffer, sizeof(buffer));
-        QThread::msleep(15);
+        QThread::msleep(MOUSE_CLICK_WAIT);
         buffer.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
         SendInput(1, &buffer, sizeof(buffer));
     }
@@ -331,6 +395,7 @@ void mouse_move_press(int x, int y, __U16_TYPE code) {
     buffer.mi.dy = (y * (0xFFFF / sizeScreen.height()));
     buffer.mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE);
     SendInput(1, &buffer, sizeof(INPUT));
+    QThread::msleep(MOUSE_MOVE_WAIT);
 
     INPUT buffer2 = {0};
     buffer2.type = INPUT_MOUSE;
@@ -376,6 +441,7 @@ void mouse_move_release(int x, int y, __U16_TYPE code)
     buffer.mi.dy = (y * (0xFFFF / sizeScreen.height()));
     buffer.mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE);
     SendInput(1, &buffer, sizeof(INPUT));
+    QThread::msleep(MOUSE_MOVE_WAIT);
 
     INPUT buffer2 = {0};
     buffer2.type = INPUT_MOUSE;
@@ -439,6 +505,7 @@ void destroy_app(){
 //        return ;
 //    }
 //    close(fd);
+    qDebug() << "exit";
 }
 
 void send_syn() {
@@ -553,7 +620,9 @@ int main(int argc, char **argv)
 
 
 
-    TcpServer server;
+    server = new TcpServer;
+    qInstallMessageHandler(myMessageOutput);
+    server->show();
 
     return a.exec();
 }
